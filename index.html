@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PhotoSheet PRO MAX - Ultimate Studio Version</title>
+    <style>
+        :root {
+            --bg-color: #f0f2f5;
+            --panel-bg: #ffffff;
+            --text-color: #1c1e21;
+            --border-color: #dddfe2;
+            --primary: #0066ff;
+            --primary-hover: #0052cc;
+            --accent: #e5f0ff;
+            --danger: #ff4d4f;
+            --shadow: 0 4px 12px rgba(0,0,0,0.08);
+            --radius: 8px;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #18191a;
+            --panel-bg: #242526;
+            --text-color: #e4e6eb;
+            --border-color: #3e4042;
+            --primary: #4da6ff;
+            --primary-hover: #1a8cff;
+            --accent: #263951;
+            --shadow: 0 4px 16px rgba(0,0,0,0.3);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-color); transition: 0.3s; overflow-x: hidden; }
+
+        /* Header */
+        header { background: var(--panel-bg); padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border-color); }
+        .logo-area h1 { color: var(--primary); font-size: 22px; font-weight: 800; display: flex; align-items: center; gap: 8px;}
+        .header-actions { display: flex; gap: 10px; }
+        button { cursor: pointer; border: none; padding: 8px 15px; border-radius: var(--radius); font-weight: 600; font-size: 13px; transition: 0.2s; }
+        .btn-icon { background: var(--accent); color: var(--primary); width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 18px; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-outline { background: transparent; border: 1px solid var(--border-color); color: var(--text-color); }
+
+        /* App Container */
+        .app-container { display: flex; height: calc(100vh - 65px); width: 100%; }
+        @media (max-width: 992px) { .app-container { flex-direction: column; height: auto; overflow-y: auto; } }
+
+        /* Sidebar Tools */
+        .sidebar { width: 340px; background: var(--panel-bg); overflow-y: auto; padding: 15px; border-right: 1px solid var(--border-color); flex-shrink: 0; }
+        .sidebar::-webkit-scrollbar { width: 5px; }
+        .sidebar::-webkit-scrollbar-thumb { background: #bbb; border-radius: 10px; }
+        @media (max-width: 992px) { .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border-color); } }
+
+        .tool-section { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px dashed var(--border-color); }
+        .tool-section h3 { font-size: 14px; text-transform: uppercase; color: var(--primary); margin-bottom: 10px; font-weight: bold; display: flex; align-items: center; gap: 5px;}
+        
+        .grid-2, .grid-3 { display: grid; gap: 8px; margin-bottom: 10px; }
+        .grid-2 { grid-template-columns: 1fr 1fr; }
+        .grid-3 { grid-template-columns: repeat(3, 1fr); }
+        
+        .tool-btn { background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-color); padding: 10px 5px; text-align: center; border-radius: 6px; font-size: 12px; }
+        .tool-btn.active { background: var(--primary); color: white; border-color: var(--primary); font-weight: bold; }
+
+        .slider-group { margin-bottom: 10px; }
+        .slider-group label { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px; font-weight: 500; }
+        input[type="range"] { width: 100%; height: 5px; border-radius: 3px; background: var(--border-color); -webkit-appearance: none; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--primary); cursor: pointer; }
+
+        .input-inline { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--bg-color); padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border-color); margin-bottom: 10px; }
+        .input-inline label { font-size: 13px; font-weight: 500; }
+        .input-inline input[type="number"] { width: 65px; padding: 5px; border: 1px solid var(--border-color); border-radius: 4px; text-align: center; font-weight: bold; outline: none; }
+        .input-inline input[type="color"] { width: 40px; height: 30px; padding: 0; border: none; cursor: pointer; background: transparent; }
+
+        /* Fit Section Highlight */
+        .fit-section { background: var(--accent); padding: 12px; border-radius: 8px; border: 1px solid var(--primary); margin-bottom: 20px; }
+
+        /* Editor Area */
+        .editor-area { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 20px; background: var(--bg-color); overflow: hidden; position: relative; }
+        .upload-zone { border: 2px dashed var(--primary); border-radius: var(--radius); width: 100%; max-width: 400px; padding: 30px 20px; text-align: center; background: var(--panel-bg); cursor: pointer; margin-bottom: 20px; }
+        .canvas-wrapper { position: relative; max-width: 100%; box-shadow: var(--shadow); background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAMUlEQVQ4T2NkYGAQYcAP3ne1/sfDQFwYMWBqwHAY0EgwHAaMIMZwnoERx5tGvEEMBgBn3SEp1e1oqwAAAABJRU5ErkJggg=='); }
+        canvas { max-width: 100%; max-height: 55vh; display: block; cursor: move; }
+
+        /* A4 Live Preview Area */
+        .a4-panel { width: 420px; background: #333; display: flex; flex-direction: column; align-items: center; padding: 10px; flex-shrink: 0; border-left: 1px solid var(--border-color); }
+        @media (max-width: 992px) { .a4-panel { width: 100%; border-left: none; min-height: 600px; } }
+        .a4-controls { width: 100%; background: rgba(0,0,0,0.6); padding: 10px; border-radius: var(--radius); display: flex; justify-content: space-between; align-items: center; color: white; margin-bottom: 15px; font-size: 13px; z-index: 10; }
+        .a4-viewport { flex: 1; width: 100%; overflow: auto; display: flex; justify-content: center; padding-bottom: 50px; }
+        
+        /* THE PERFECT A4 SHEET */
+        .a4-sheet { 
+            background: white; 
+            width: 210mm; 
+            height: 297mm; 
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5); 
+            padding: 10mm 5mm; /* 200mm space inside */
+            transform-origin: top center; 
+            display: grid;
+            justify-content: center;
+            align-content: start;
+            overflow: hidden;
+        }
+        .sheet-photo { 
+            background-size: 100% 100%; 
+            background-repeat: no-repeat; 
+            background-position: center; 
+            box-sizing: border-box; 
+        }
+
+        /* HD PDF Print Settings */
+        @media print {
+            body * { visibility: hidden; }
+            .a4-panel, .a4-viewport, .a4-sheet, .a4-sheet * { visibility: visible; }
+            .a4-panel { position: absolute; left: 0; top: 0; width: 100vw; height: 100vh; background: white; border: none; padding: 0; }
+            .a4-controls { display: none; }
+            .a4-viewport { padding: 0; overflow: visible; }
+            .a4-sheet { transform: scale(1) !important; margin: 0; box-shadow: none; border: none; padding: 10mm 5mm; }
+            @page { size: A4; margin: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-area">
+            <h1>📷 PhotoSheet PRO MAX</h1>
+        </div>
+        <div class="header-actions">
+            <button class="btn-icon" id="themeToggle">🌙</button>
+            <button class="btn-primary" onclick="window.print()" style="font-size: 15px;">🖨️ Download HD PDF / Print</button>
+        </div>
+    </header>
+
+    <div class="app-container">
+        
+        <aside class="sidebar">
+
+            <div class="fit-section">
+                <h3 style="color:var(--primary); margin-bottom:5px;">🎯 1. Fit & Adjust (Stop Cutting)</h3>
+                <p style="font-size:11px; color:#666; margin-bottom:10px;">Agar image cut rahi hai, toh zoom kam karein aur position theek karein.</p>
+                <div class="slider-group">
+                    <label>Zoom In/Out <span id="val-zoom">100%</span></label>
+                    <input type="range" id="zoom" min="20" max="300" value="100" oninput="redraw()">
+                </div>
+                <div class="grid-2" style="margin-bottom:0;">
+                    <div class="slider-group" style="margin-bottom:0;">
+                        <label>Left/Right</label>
+                        <input type="range" id="moveX" min="-500" max="500" value="0" oninput="redraw()">
+                    </div>
+                    <div class="slider-group" style="margin-bottom:0;">
+                        <label>Up/Down</label>
+                        <input type="range" id="moveY" min="-500" max="500" value="0" oninput="redraw()">
+                    </div>
+                </div>
+                <button class="tool-btn" style="width:100%; margin-top:10px;" onclick="resetFit()">Reset Position</button>
+            </div>
+
+            <div class="tool-section">
+                <h3>✂️ 2. Size (Grid Setup)</h3>
+                <div class="grid-2">
+                    <button class="tool-btn active" onclick="setSize(30, 40, this)">Studio (6 per row)</button>
+                    <button class="tool-btn" onclick="setSize(35, 45, this)">Passport (5 per row)</button>
+                    <button class="tool-btn" onclick="setSize(50, 50, this)">Visa (2x2 inch)</button>
+                    <button class="tool-btn" onclick="setSize(40, 60, this)">Auto 4x6cm</button>
+                </div>
+            </div>
+
+            <div class="tool-section">
+                <h3>🔄 3. Rotate & Flip</h3>
+                <div class="grid-2">
+                    <button class="tool-btn" onclick="applyTransform('rotate', -90)">↺ Left</button>
+                    <button class="tool-btn" onclick="applyTransform('rotate', 90)">↻ Right</button>
+                    <button class="tool-btn" onclick="applyTransform('flipH', -1)">↔ Flip H</button>
+                    <button class="tool-btn" onclick="applyTransform('flipV', -1)">↕ Flip V</button>
+                </div>
+            </div>
+
+            <div class="tool-section">
+                <h3>🎛️ 4. Color Adjustments</h3>
+                <div class="slider-group">
+                    <label>Brightness <span id="val-bright">100%</span></label>
+                    <input type="range" id="bright" min="0" max="200" value="100" oninput="redraw()">
+                </div>
+                <div class="slider-group">
+                    <label>Contrast <span id="val-contra">100%</span></label>
+                    <input type="range" id="contra" min="0" max="200" value="100" oninput="redraw()">
+                </div>
+                <div class="slider-group">
+                    <label>Saturation <span id="val-satur">100%</span></label>
+                    <input type="range" id="satur" min="0" max="200" value="100" oninput="redraw()">
+                </div>
+            </div>
+
+            <div class="tool-section">
+                <h3>🎨 5. Background Remover</h3>
+                <div class="grid-2">
+                    <button class="tool-btn btn-outline" id="pickerBtn" onclick="togglePicker()">🎤 Pick Color</button>
+                    <button class="tool-btn" onclick="resetBg()">🔄 Reset BG</button>
+                </div>
+                <div class="slider-group" style="margin-top:10px;">
+                    <label>Erase Power (Tolerance) <span id="val-tolerance">30</span></label>
+                    <input type="range" id="tolerance" min="0" max="100" value="30" oninput="redraw()">
+                </div>
+                <label style="font-size:12px; font-weight:bold; display:block; margin: 10px 0 5px 0;">New BG Color:</label>
+                <div class="grid-3">
+                    <button class="tool-btn" style="background:#fff; color:#000;" onclick="setNewBg('#ffffff')">White</button>
+                    <button class="tool-btn" style="background:#0066ff; color:#fff;" onclick="setNewBg('#0066ff')">Blue</button>
+                    <input type="color" id="customColor" style="width:100%; height:36px; cursor:pointer;" onchange="setNewBg(this.value)">
+                </div>
+            </div>
+
+            <div class="tool-section">
+                <h3>🖼️ 6. Photo Border</h3>
+                <div class="input-inline">
+                    <label>Enable Border:</label>
+                    <input type="checkbox" id="borderEnabled" onchange="redraw()" checked style="width:20px; height:20px; cursor:pointer;">
+                </div>
+                <div class="input-inline">
+                    <label>Thickness (px):</label>
+                    <input type="number" id="borderThickness" min="1" max="15" value="3" oninput="redraw()">
+                </div>
+                <div class="input-inline">
+                    <label>Border Color:</label>
+                    <input type="color" id="borderColor" value="#000000" onchange="redraw()">
+                </div>
+            </div>
+
+            <div class="tool-section">
+                <h3>📄 7. Copies & Quality</h3>
+                <div class="input-inline">
+                    <label style="font-weight:bold; color:var(--primary);">Custom Copies:</label>
+                    <input type="number" id="customCopies" min="1" max="120" value="30" oninput="updateCopiesNum(this.value)">
+                </div>
+                <div class="grid-3">
+                    <button class="tool-btn btn-copies active" onclick="setCopiesPreset(30, this)">30</button>
+                    <button class="tool-btn btn-copies" onclick="setCopiesPreset(12, this)">12</button>
+                    <button class="tool-btn btn-copies" onclick="setCopiesPreset(6, this)">6</button>
+                </div>
+                
+                <div class="slider-group" style="margin-top:15px; border-top: 1px solid var(--border-color); padding-top: 10px;">
+                    <label style="color:var(--primary);">PDF Quality <span id="val-quality">90%</span></label>
+                    <input type="range" id="qualitySlider" min="10" max="100" value="90" oninput="updateQuality()">
+                </div>
+            </div>
+
+        </aside>
+
+        <main class="editor-area">
+            <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+                <div style="font-size:30px;">📁</div>
+                <h3 style="margin:10px 0; color:var(--primary);">Upload New Photo</h3>
+                <p style="font-size:12px; color:gray;">JPG or PNG supported</p>
+            </div>
+            <input type="file" id="fileInput" accept="image/*" style="display:none;">
+
+            <div class="canvas-wrapper">
+                <canvas id="mainCanvas"></canvas>
+            </div>
+        </main>
+
+        <aside class="a4-panel">
+            <div class="a4-controls">
+                <b>A4 Print Layout</b>
+                <div style="display:flex; gap:5px;">
+                    <button class="btn-outline" style="padding:4px 10px; color:white;" onclick="zoomA4(-0.1)">➖</button>
+                    <button class="btn-outline" style="padding:4px 10px; color:white;" onclick="zoomA4(0.1)">➕</button>
+                </div>
+            </div>
+            
+            <div class="a4-viewport" id="a4Viewport">
+                <div class="a4-sheet" id="a4Sheet">
+                    </div>
+            </div>
+        </aside>
+
+    </div>
+
+    <script>
+        // DOM Elements
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        const a4Sheet = document.getElementById('a4Sheet');
+        const fileInput = document.getElementById('fileInput');
+
+        // State variables
+        let imgObj = null;
+        let pW = 30, pH = 40; // Default Studio Size
+        let copies = 30;
+        let gap = 4; // 4mm standard cut gap
+        let imgQuality = 0.90; 
+
+        // Transforms & BG
+        let state = { rotate: 0, flipH: 1, flipV: 1, bgPicked: null, bgReplace: "transparent" };
+
+        // A4 Zoom Preview
+        let a4ZoomLevel = window.innerWidth < 992 ? 0.25 : 0.45;
+        window.addEventListener('load', () => { updateA4Transform(); });
+        function zoomA4(val) { a4ZoomLevel += val; updateA4Transform(); }
+        function updateA4Transform() { a4Sheet.style.transform = `scale(${a4ZoomLevel})`; }
+
+        // Upload
+        fileInput.addEventListener('change', e => {
+            const file = e.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = ev => {
+                imgObj = new Image();
+                imgObj.onload = () => {
+                    state = { rotate: 0, flipH: 1, flipV: 1, bgPicked: null, bgReplace: "transparent" };
+                    resetFit(); // Reset zoom/pan on new image
+                };
+                imgObj.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // 1. FIT & POSITION (The Fix for Cropping)
+        function resetFit() {
+            document.getElementById('zoom').value = 100;
+            document.getElementById('moveX').value = 0;
+            document.getElementById('moveY').value = 0;
+            redraw();
+        }
+
+        // Tools
+        function applyTransform(type, val) {
+            if(!imgObj) return;
+            if(type === 'rotate') state.rotate = (state.rotate + val) % 360;
+            if(type === 'flipH') state.flipH *= val;
+            if(type === 'flipV') state.flipV *= val;
+            redraw();
+        }
+
+        function setSize(w, h, btn) {
+            pW = w; pH = h;
+            document.querySelectorAll('.tool-section .grid-2 .tool-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            if(imgObj) redraw();
+        }
+
+        // Copies
+        function setCopiesPreset(c, btn) {
+            copies = parseInt(c);
+            document.getElementById('customCopies').value = copies;
+            document.querySelectorAll('.btn-copies').forEach(b => b.classList.remove('active'));
+            if(btn) btn.classList.add('active');
+            if(imgObj) updateA4();
+        }
+        function updateCopiesNum(val) {
+            let num = parseInt(val);
+            if(isNaN(num) || num < 1) return;
+            copies = num;
+            document.querySelectorAll('.btn-copies').forEach(b => b.classList.remove('active'));
+            if(imgObj) updateA4();
+        }
+
+        function updateQuality() {
+            let val = document.getElementById('qualitySlider').value;
+            imgQuality = val / 100;
+            document.getElementById('val-quality').innerText = val + "%";
+            if(imgObj) updateA4();
+        }
+
+        // REDRAW CANVAS (Full Logic + Manual Zoom/Pan)
+        function redraw() {
+            if(!imgObj) return;
+
+            // UI feedback
+            const b = document.getElementById('bright').value;
+            const c = document.getElementById('contra').value;
+            const s = document.getElementById('satur').value;
+            document.getElementById('val-bright').innerText = b + "%";
+            document.getElementById('val-contra').innerText = c + "%";
+            document.getElementById('val-satur').innerText = s + "%";
+
+            // Fit feedback
+            const zoomVal = document.getElementById('zoom').value / 100;
+            const moveX = parseInt(document.getElementById('moveX').value);
+            const moveY = parseInt(document.getElementById('moveY').value);
+            document.getElementById('val-zoom').innerText = Math.round(zoomVal * 100) + "%";
+
+            // HD Canvas Setup (~300 DPI)
+            const scaleFactorCanvas = 15; 
+            canvas.width = pW * scaleFactorCanvas;
+            canvas.height = pH * scaleFactorCanvas;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Fill solid white first (for transparent PNGs)
+            ctx.fillStyle = "white";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Apply Background Replacement Color if selected
+            if(state.bgReplace !== "transparent") {
+                ctx.fillStyle = state.bgReplace;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+
+            ctx.save();
+            ctx.translate(canvas.width/2, canvas.height/2);
+            ctx.rotate(state.rotate * Math.PI / 180);
+            ctx.scale(state.flipH, state.flipV);
+            ctx.filter = `brightness(${b}%) contrast(${c}%) saturate(${s}%)`;
+
+            // SMART FIT LOGIC WITH ZOOM/PAN
+            // Calculate base scale to 'cover' the canvas initially
+            let isRotated90 = (Math.abs(state.rotate) === 90 || Math.abs(state.rotate) === 270);
+            let targetW = isRotated90 ? canvas.height : canvas.width;
+            let targetH = isRotated90 ? canvas.width : canvas.height;
+            
+            let baseScale = Math.max(targetW / imgObj.width, targetH / imgObj.height);
+            
+            let drawW = imgObj.width * baseScale * zoomVal;
+            let drawH = imgObj.height * baseScale * zoomVal;
+            
+            // X and Y relative to center
+            let drawX = (-drawW / 2) + moveX;
+            let drawY = (-drawH / 2) + moveY;
+
+            ctx.drawImage(imgObj, drawX, drawY, drawW, drawH);
+            ctx.restore();
+
+            // BG Remover Magic Wand
+            if(state.bgPicked) { removeBackgroundProcess(); }
+
+            // BORDER (Draw inside canvas)
+            const borderOn = document.getElementById('borderEnabled').checked;
+            if(borderOn) {
+                const thick = parseInt(document.getElementById('borderThickness').value);
+                const col = document.getElementById('borderColor').value;
+                const realThick = thick * (scaleFactorCanvas / 3.78); 
+                ctx.lineWidth = realThick;
+                ctx.strokeStyle = col;
+                ctx.strokeRect(realThick/2, realThick/2, canvas.width - realThick, canvas.height - realThick);
+            }
+
+            updateA4();
+        }
+
+        // BACKGROUND REMOVER LOGIC
+        let pickerActive = false;
+        function togglePicker() {
+            if(!imgObj) return;
+            pickerActive = !pickerActive;
+            const btn = document.getElementById('pickerBtn');
+            if(pickerActive) {
+                btn.style.background = "var(--danger)"; btn.style.color = "white";
+                btn.innerText = "🛑 Click Photo"; canvas.style.cursor = "crosshair";
+            } else {
+                btn.style.background = ""; btn.style.color = "";
+                btn.innerText = "🎤 Pick Color"; canvas.style.cursor = "default";
+            }
+        }
+        canvas.addEventListener('click', e => {
+            if(!pickerActive || !imgObj) return;
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const x = (e.clientX - rect.left) * scaleX;
+            const y = (e.clientY - rect.top) * scaleY;
+            state.bgPicked = ctx.getImageData(x, y, 1, 1).data;
+            togglePicker();
+            redraw();
+        });
+        function resetBg() { state.bgPicked = null; state.bgReplace = "transparent"; redraw(); }
+        function setNewBg(col) { state.bgReplace = col; redraw(); }
+        function removeBackgroundProcess() {
+            const tol = document.getElementById('tolerance').value;
+            document.getElementById('val-tolerance').innerText = tol;
+            let imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            let data = imgData.data;
+            const tR = state.bgPicked[0], tG = state.bgPicked[1], tB = state.bgPicked[2];
+            const tempC = document.createElement('canvas'); tempC.width = canvas.width; tempC.height = canvas.height;
+            const tempCtx = tempC.getContext('2d');
+            if(state.bgReplace !== "transparent") { tempCtx.fillStyle = state.bgReplace; tempCtx.fillRect(0,0, tempC.width, tempC.height); }
+            for (let i = 0; i < data.length; i += 4) {
+                let dist = Math.sqrt(Math.pow(data[i]-tR,2) + Math.pow(data[i+1]-tG,2) + Math.pow(data[i+2]-tB,2));
+                if (dist < (tol * 4.41)) { data[i+3] = 0; }
+            }
+            ctx.putImageData(imgData, 0, 0);
+            tempCtx.drawImage(canvas, 0, 0);
+            ctx.clearRect(0,0, canvas.width, canvas.height);
+            ctx.drawImage(tempC, 0, 0);
+        }
+
+        // UPDATE A4 SHEET - THE BULLETPROOF GRID LOGIC
+        function updateA4() {
+            if(!imgObj) return;
+            a4Sheet.innerHTML = '';
+            
+            // Total A4 width = 210mm. 
+            // We have 10mm total padding (5mm left + 5mm right). Available = 200mm.
+            const availableWidth = 200; 
+            // Calculate strictly how many columns can fit. For 30mm + 4mm gap -> exactly 6 cols.
+            const cols = Math.floor((availableWidth + gap) / (pW + gap)); 
+            
+            a4Sheet.style.gridTemplateColumns = `repeat(${cols}, ${pW}mm)`;
+            a4Sheet.style.gridAutoRows = `${pH}mm`;
+            a4Sheet.style.gap = `${gap}mm`;
+
+            const dataURL = canvas.toDataURL('image/jpeg', imgQuality);
+
+            for(let i=0; i<copies; i++) {
+                const div = document.createElement('div');
+                div.className = 'sheet-photo';
+                div.style.width = `${pW}mm`;
+                div.style.height = `${pH}mm`;
+                div.style.backgroundImage = `url(${dataURL})`;
+                a4Sheet.appendChild(div);
+            }
+        }
+
+        // Theme Toggle
+        document.getElementById('themeToggle').addEventListener('click', function() {
+            if (document.documentElement.getAttribute('data-theme') === 'dark') {
+                document.documentElement.removeAttribute('data-theme'); this.innerText = '🌙';
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark'); this.innerText = '☀️';
+            }
+        });
+    </script>
+</body>
+</html>
