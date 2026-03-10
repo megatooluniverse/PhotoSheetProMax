@@ -79,7 +79,7 @@
         .editor-area { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 20px; background: var(--bg-color); overflow: hidden; position: relative; }
         .upload-zone { border: 2px dashed var(--primary); border-radius: var(--radius); width: 100%; max-width: 400px; padding: 30px 20px; text-align: center; background: var(--panel-bg); cursor: pointer; margin-bottom: 20px; }
         .canvas-wrapper { position: relative; max-width: 100%; box-shadow: var(--shadow); background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAMUlEQVQ4T2NkYGAQYcAP3ne1/sfDQFwYMWBqwHAY0EgwHAaMIMZwnoERx5tGvEEMBgBn3SEp1e1oqwAAAABJRU5ErkJggg=='); }
-        canvas { max-width: 100%; max-height: 55vh; display: block; cursor: move; }
+        canvas { max-width: 100%; max-height: 55vh; display: block; cursor: crosshair; }
 
         /* A4 Live Preview Area */
         .a4-panel { width: 420px; background: #333; display: flex; flex-direction: column; align-items: center; padding: 10px; flex-shrink: 0; border-left: 1px solid var(--border-color); }
@@ -93,28 +93,46 @@
             width: 210mm; 
             height: 297mm; 
             box-shadow: 0 5px 20px rgba(0,0,0,0.5); 
-            padding: 10mm 5mm; /* 200mm space inside */
+            padding: 10mm 5mm; 
             transform-origin: top center; 
             display: grid;
             justify-content: center;
             align-content: start;
             overflow: hidden;
+            box-sizing: border-box;
         }
-        .sheet-photo { 
-            background-size: 100% 100%; 
-            background-repeat: no-repeat; 
-            background-position: center; 
-            box-sizing: border-box; 
+        
+        /* FIX: Using img tag styling instead of background-image */
+        img.sheet-photo { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+            box-sizing: border-box;
+            display: block;
         }
 
-        /* HD PDF Print Settings */
+        /* HD PDF Print Settings - FIX FOR PDF GENERATION */
         @media print {
             body * { visibility: hidden; }
             .a4-panel, .a4-viewport, .a4-sheet, .a4-sheet * { visibility: visible; }
-            .a4-panel { position: absolute; left: 0; top: 0; width: 100vw; height: 100vh; background: white; border: none; padding: 0; }
-            .a4-controls { display: none; }
-            .a4-viewport { padding: 0; overflow: visible; }
-            .a4-sheet { transform: scale(1) !important; margin: 0; box-shadow: none; border: none; padding: 10mm 5mm; }
+            
+            /* Reset positioning for print to avoid margin cuts */
+            .a4-panel { position: absolute; left: 0; top: 0; width: 210mm; height: 297mm; background: white; border: none; padding: 0; overflow: visible;}
+            .a4-controls { display: none !important; }
+            .a4-viewport { padding: 0; overflow: visible; display: block; position: absolute; left: 0; top: 0;}
+            
+            .a4-sheet { 
+                transform: scale(1) !important; 
+                margin: 0; 
+                box-shadow: none; 
+                border: none; 
+                padding: 10mm 5mm; 
+                width: 210mm; 
+                height: 297mm;
+            }
+            
+            /* Force background graphics to print just in case */
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             @page { size: A4; margin: 0; }
         }
     </style>
@@ -136,7 +154,7 @@
         <aside class="sidebar">
 
             <div class="fit-section">
-                <h3 style="color:var(--primary); margin-bottom:5px;">🎯 1. Fit & Adjust (Stop Cutting)</h3>
+                <h3 style="color:var(--primary); margin-bottom:5px;">🎯 1. Fit & Adjust</h3>
                 <p style="font-size:11px; color:#666; margin-bottom:10px;">Agar image cut rahi hai, toh zoom kam karein aur position theek karein.</p>
                 <div class="slider-group">
                     <label>Zoom In/Out <span id="val-zoom">100%</span></label>
@@ -238,8 +256,8 @@
                 </div>
                 
                 <div class="slider-group" style="margin-top:15px; border-top: 1px solid var(--border-color); padding-top: 10px;">
-                    <label style="color:var(--primary);">PDF Quality <span id="val-quality">90%</span></label>
-                    <input type="range" id="qualitySlider" min="10" max="100" value="90" oninput="updateQuality()">
+                    <label style="color:var(--primary);">HD Export Quality <span id="val-quality">100%</span></label>
+                    <input type="range" id="qualitySlider" min="50" max="100" value="100" oninput="updateQuality()">
                 </div>
             </div>
 
@@ -269,7 +287,7 @@
             
             <div class="a4-viewport" id="a4Viewport">
                 <div class="a4-sheet" id="a4Sheet">
-                    </div>
+                </div>
             </div>
         </aside>
 
@@ -287,7 +305,7 @@
         let pW = 30, pH = 40; // Default Studio Size
         let copies = 30;
         let gap = 4; // 4mm standard cut gap
-        let imgQuality = 0.90; 
+        let imgQuality = 1.0; 
 
         // Transforms & BG
         let state = { rotate: 0, flipH: 1, flipV: 1, bgPicked: null, bgReplace: "transparent" };
@@ -307,14 +325,14 @@
                 imgObj = new Image();
                 imgObj.onload = () => {
                     state = { rotate: 0, flipH: 1, flipV: 1, bgPicked: null, bgReplace: "transparent" };
-                    resetFit(); // Reset zoom/pan on new image
+                    resetFit(); 
                 };
                 imgObj.src = ev.target.result;
             };
             reader.readAsDataURL(file);
         });
 
-        // 1. FIT & POSITION (The Fix for Cropping)
+        // 1. FIT & POSITION
         function resetFit() {
             document.getElementById('zoom').value = 100;
             document.getElementById('moveX').value = 0;
@@ -361,7 +379,7 @@
             if(imgObj) updateA4();
         }
 
-        // REDRAW CANVAS (Full Logic + Manual Zoom/Pan)
+        // REDRAW CANVAS (Optimized)
         function redraw() {
             if(!imgObj) return;
 
@@ -373,57 +391,51 @@
             document.getElementById('val-contra').innerText = c + "%";
             document.getElementById('val-satur').innerText = s + "%";
 
-            // Fit feedback
             const zoomVal = document.getElementById('zoom').value / 100;
             const moveX = parseInt(document.getElementById('moveX').value);
             const moveY = parseInt(document.getElementById('moveY').value);
             document.getElementById('val-zoom').innerText = Math.round(zoomVal * 100) + "%";
 
-            // HD Canvas Setup (~300 DPI)
+            // High Res Canvas (Print Quality)
             const scaleFactorCanvas = 15; 
             canvas.width = pW * scaleFactorCanvas;
             canvas.height = pH * scaleFactorCanvas;
             
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Fill solid white first (for transparent PNGs)
-            ctx.fillStyle = "white";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Apply Background Replacement Color if selected
-            if(state.bgReplace !== "transparent") {
-                ctx.fillStyle = state.bgReplace;
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-            }
-
+            // 1. Draw Original Image First
             ctx.save();
             ctx.translate(canvas.width/2, canvas.height/2);
             ctx.rotate(state.rotate * Math.PI / 180);
             ctx.scale(state.flipH, state.flipV);
             ctx.filter = `brightness(${b}%) contrast(${c}%) saturate(${s}%)`;
 
-            // SMART FIT LOGIC WITH ZOOM/PAN
-            // Calculate base scale to 'cover' the canvas initially
             let isRotated90 = (Math.abs(state.rotate) === 90 || Math.abs(state.rotate) === 270);
             let targetW = isRotated90 ? canvas.height : canvas.width;
             let targetH = isRotated90 ? canvas.width : canvas.height;
             
             let baseScale = Math.max(targetW / imgObj.width, targetH / imgObj.height);
-            
             let drawW = imgObj.width * baseScale * zoomVal;
             let drawH = imgObj.height * baseScale * zoomVal;
             
-            // X and Y relative to center
-            let drawX = (-drawW / 2) + moveX;
-            let drawY = (-drawH / 2) + moveY;
+            // Adjust movement mapping to be proportional to canvas size
+            let drawX = (-drawW / 2) + (moveX * (scaleFactorCanvas/2));
+            let drawY = (-drawH / 2) + (moveY * (scaleFactorCanvas/2));
 
             ctx.drawImage(imgObj, drawX, drawY, drawW, drawH);
             ctx.restore();
 
-            // BG Remover Magic Wand
+            // 2. Erase Picked Background Color
             if(state.bgPicked) { removeBackgroundProcess(); }
 
-            // BORDER (Draw inside canvas)
+            // 3. Draw New Solid Background Behind Image
+            const finalBg = (state.bgReplace !== "transparent") ? state.bgReplace : "white";
+            ctx.globalCompositeOperation = 'destination-over'; // Draws BEHIND existing pixels
+            ctx.fillStyle = finalBg;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.globalCompositeOperation = 'source-over'; // Reset to default
+
+            // 4. Draw Border on top
             const borderOn = document.getElementById('borderEnabled').checked;
             if(borderOn) {
                 const thick = parseInt(document.getElementById('borderThickness').value);
@@ -437,7 +449,7 @@
             updateA4();
         }
 
-        // BACKGROUND REMOVER LOGIC
+        // BACKGROUND REMOVER LOGIC (Fixed math for proper erasing)
         let pickerActive = false;
         function togglePicker() {
             if(!imgObj) return;
@@ -451,6 +463,7 @@
                 btn.innerText = "🎤 Pick Color"; canvas.style.cursor = "default";
             }
         }
+        
         canvas.addEventListener('click', e => {
             if(!pickerActive || !imgObj) return;
             const rect = canvas.getBoundingClientRect();
@@ -458,40 +471,47 @@
             const scaleY = canvas.height / rect.height;
             const x = (e.clientX - rect.left) * scaleX;
             const y = (e.clientY - rect.top) * scaleY;
+            
             state.bgPicked = ctx.getImageData(x, y, 1, 1).data;
             togglePicker();
             redraw();
         });
+
         function resetBg() { state.bgPicked = null; state.bgReplace = "transparent"; redraw(); }
         function setNewBg(col) { state.bgReplace = col; redraw(); }
+
         function removeBackgroundProcess() {
             const tol = document.getElementById('tolerance').value;
             document.getElementById('val-tolerance').innerText = tol;
+            
             let imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             let data = imgData.data;
             const tR = state.bgPicked[0], tG = state.bgPicked[1], tB = state.bgPicked[2];
-            const tempC = document.createElement('canvas'); tempC.width = canvas.width; tempC.height = canvas.height;
-            const tempCtx = tempC.getContext('2d');
-            if(state.bgReplace !== "transparent") { tempCtx.fillStyle = state.bgReplace; tempCtx.fillRect(0,0, tempC.width, tempC.height); }
+            
             for (let i = 0; i < data.length; i += 4) {
-                let dist = Math.sqrt(Math.pow(data[i]-tR,2) + Math.pow(data[i+1]-tG,2) + Math.pow(data[i+2]-tB,2));
-                if (dist < (tol * 4.41)) { data[i+3] = 0; }
+                // Ignore already transparent pixels
+                if (data[i+3] === 0) continue;
+                
+                let dist = Math.sqrt(
+                    Math.pow(data[i]-tR, 2) + 
+                    Math.pow(data[i+1]-tG, 2) + 
+                    Math.pow(data[i+2]-tB, 2)
+                );
+                
+                // Color distance threshold
+                if (dist < (tol * 4.41)) { 
+                    data[i+3] = 0; // Set Alpha to 0 (Transparent)
+                }
             }
             ctx.putImageData(imgData, 0, 0);
-            tempCtx.drawImage(canvas, 0, 0);
-            ctx.clearRect(0,0, canvas.width, canvas.height);
-            ctx.drawImage(tempC, 0, 0);
         }
 
-        // UPDATE A4 SHEET - THE BULLETPROOF GRID LOGIC
+        // UPDATE A4 SHEET - THE BULLETPROOF GRID LOGIC (Print Fix Applied)
         function updateA4() {
             if(!imgObj) return;
             a4Sheet.innerHTML = '';
             
-            // Total A4 width = 210mm. 
-            // We have 10mm total padding (5mm left + 5mm right). Available = 200mm.
-            const availableWidth = 200; 
-            // Calculate strictly how many columns can fit. For 30mm + 4mm gap -> exactly 6 cols.
+            const availableWidth = 200; // 210mm total - 10mm padding
             const cols = Math.floor((availableWidth + gap) / (pW + gap)); 
             
             a4Sheet.style.gridTemplateColumns = `repeat(${cols}, ${pW}mm)`;
@@ -501,12 +521,13 @@
             const dataURL = canvas.toDataURL('image/jpeg', imgQuality);
 
             for(let i=0; i<copies; i++) {
-                const div = document.createElement('div');
-                div.className = 'sheet-photo';
-                div.style.width = `${pW}mm`;
-                div.style.height = `${pH}mm`;
-                div.style.backgroundImage = `url(${dataURL})`;
-                a4Sheet.appendChild(div);
+                // BUG FIX: Using <img> tag instead of background-image so it prints perfectly
+                const img = document.createElement('img');
+                img.className = 'sheet-photo';
+                img.style.width = `${pW}mm`;
+                img.style.height = `${pH}mm`;
+                img.src = dataURL;
+                a4Sheet.appendChild(img);
             }
         }
 
